@@ -1,18 +1,644 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cyberpunk Fireworks</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <div class="canvas-wrapper">
-        <canvas id="fireworksCanvas" width="1280" height="720"></canvas>
-      </div>
-      <button id="fireworksBtn">Launch Fireworks</button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airport Manager - Tycoon Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .game-area {
+            flex: 1;
+            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+
+        .ui-panel {
+            width: 300px;
+            background-color: #2a2a2a;
+            border-left: 2px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .stat-label {
+            color: #aaa;
+        }
+
+        .stat-value {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .buildings-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #4caf50;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+
+        .building-card {
+            background-color: #333;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .building-card:hover {
+            background-color: #3a3a3a;
+            border-color: #4caf50;
+            transform: translateX(5px);
+        }
+
+        .building-card.selected {
+            border-color: #4caf50;
+            background-color: #2a4a2a;
+        }
+
+        .building-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        .building-cost {
+            font-size: 12px;
+            color: #ffaa00;
+            margin-bottom: 3px;
+        }
+
+        .building-income {
+            font-size: 12px;
+            color: #4caf50;
+        }
+
+        .building-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .build-button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .build-button:hover {
+            background-color: #45a049;
+        }
+
+        .build-button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .info-panel {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #aaa;
+        }
+
+        .gameplay-tips {
+            background-color: #333;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #888;
+            border-left: 3px solid #ffaa00;
+        }
+
+        .gameplay-tips h4 {
+            color: #ffaa00;
+            margin-bottom: 5px;
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4caf50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.error {
+            background-color: #f44336;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .upgrade-info {
+            background-color: #3a3a3a;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 8px;
+            border-left: 3px solid #4caf50;
+        }
+
+        .upgrade-level {
+            font-size: 12px;
+            color: #4caf50;
+            margin-bottom: 3px;
+        }
+
+        .help-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .help-button:hover {
+            background-color: #0b7dda;
+        }
+
+        .clock-panel {
+            background-color: #333;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .clock-display {
+            text-align: center;
+        }
+
+        .clock-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4caf50;
+            margin-bottom: 8px;
+            font-family: monospace;
+        }
+
+        .clock-controls {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .speed-button {
+            flex: 1;
+            padding: 6px 8px;
+            background-color: #444;
+            color: #ccc;
+            border: 1px solid #555;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .speed-button:hover {
+            background-color: #555;
+            color: #fff;
+        }
+
+        .speed-button.active {
+            background-color: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 2px solid #4caf50;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            color: #4caf50;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: #4caf50;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-button:hover {
+            color: #fff;
+        }
+
+        .help-section {
+            margin-bottom: 20px;
+        }
+
+        .help-section h3 {
+            color: #4caf50;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .help-section p {
+            color: #ccc;
+            line-height: 1.6;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .help-list {
+            list-style-position: inside;
+            color: #ccc;
+            padding-left: 15px;
+        }
+
+        .help-list li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .help-shortcut {
+            background-color: #333;
+            padding: 10px;
+            border-left: 3px solid #2196F3;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+
+        .help-shortcut strong {
+            color: #2196F3;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .disaster-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff4444;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            z-index: 1500;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.8);
+            animation: disasterPulse 0.5s ease;
+            min-width: 300px;
+        }
+
+        .disaster-alert h2 {
+            margin: 0 0 15px 0;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .disaster-alert p {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .disaster-cost {
+            color: #ffff00;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        @keyframes disasterPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .disaster-bar {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 68, 68, 0.9);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            z-index: 1400;
+            font-weight: bold;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-area">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div class="ui-panel">
+            <button class="help-button" id="helpButton">? Help Menu</button>
+
+            <div class="clock-panel">
+                <div class="clock-display">
+                    <div class="clock-time" id="gameTime">Day 1 • 00:00</div>
+                    <div class="clock-controls">
+                        <button class="speed-button" id="pauseBtn" title="Pause (0.0x)">⏸</button>
+                        <button class="speed-button" id="speedBtn1x" title="Normal Speed (1.0x)">1x</button>
+                        <button class="speed-button active" id="speedBtn4x" title="Fast Speed (4.0x)">4x</button>
+                        <button class="speed-button" id="speedBtn10x" title="Very Fast (10x)">10x</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Money:</span>
+                    <span class="stat-value" id="money">$0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Income/sec:</span>
+                    <span class="stat-value" id="income">$0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Passengers:</span>
+                    <span class="stat-value" id="passengers">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Planes/hour:</span>
+                    <span class="stat-value" id="planesPerHour">0</span>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="info-text" id="infoText">
+                    Click on the grass to build facilities. Start with a terminal to begin receiving passengers!
+                </div>
+            </div>
+
+            <div class="scroll-area">
+                <div class="buildings-section">
+                    <div class="section-title">Buildings</div>
+                    <div id="buildingsContainer"></div>
+                </div>
+
+                <div class="gameplay-tips">
+                    <h4>💡 Tips</h4>
+                    <p>Build terminals to receive passengers. Add runways for more planes. Upgrade facilities for more income!</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <script src="script.js"></script>
-  </body>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How to Play - Airport Manager</h2>
+                <button class="close-button" id="closeHelp">&times;</button>
+            </div>
+
+            <div class="help-section">
+                <h3>🎯 Objective</h3>
+                <p>Build and manage an airport to earn money. Expand your airport with new buildings and upgrades to maximize income and passenger flow.</p>
+            </div>
+
+            <div class="help-section">
+                <h3>🏗️ Building Your Airport</h3>
+                <ol class="help-list">
+                    <li><strong>Select a building</strong> from the Buildings panel on the right</li>
+                    <li><strong>Click on the grass</strong> to place it at that location</li>
+                    <li><strong>You need a Runway</strong> for planes to land and take off</li>
+                    <li><strong>You need a Terminal</strong> to count passengers from landing planes</li>
+                    <li>Add support buildings (Hangar, Fuel Station, etc.) to increase efficiency</li>
+                </ol>
+            </div>
+
+            <div class="help-section">
+                <h3>💰 Making Money</h3>
+                <p>Each building generates income per second. The more buildings you have, the faster your income grows.</p>
+                <ul class="help-list">
+                    <li>Terminal: $50/sec (handles passengers)</li>
+                    <li>Runway: $100/sec (enables flights)</li>
+                    <li>Hangar: $75/sec (stores aircraft)</li>
+                    <li>Fuel Station: $40/sec (increases plane frequency)</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>✈️ Planes & Passengers</h3>
+                <p>Planes automatically arrive and depart based on your runways:</p>
+                <ul class="help-list">
+                    <li>Each runway spawns <strong>2 planes per hour</strong> (scales with upgrades)</li>
+                    <li>Planes approach from the left and land on your runway</li>
+                    <li>Blue particles appear when planes land</li>
+                    <li>If you have a <strong>Terminal</strong>, each landing brings 50-150 passengers</li>
+                    <li>Planes depart after 2 seconds on the ground with orange flame particles</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>⬆️ Upgrading Buildings</h3>
+                <p><strong>Right-click</strong> on any building to upgrade it:</p>
+                <ul class="help-list">
+                    <li>Each upgrade costs 50% of the original building cost × current level</li>
+                    <li>Upgrades increase income by <strong>30% per level</strong></li>
+                    <li>Level indicators show as "Lv2", "Lv3" etc. on buildings</li>
+                    <li>Higher level buildings generate more income</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>🎮 Controls</h3>
+                <div class="help-shortcut">
+                    <strong>Left Click:</strong> Select building (right panel), then click map to place
+                </div>
+                <div class="help-shortcut">
+                    <strong>Right Click:</strong> Upgrade a building (increases its income by 30%)
+                </div>
+            </div>
+
+            <div class="help-section">
+                <h3>💡 Tips for Success</h3>
+                <ul class="help-list">
+                    <li>Start by building 1-2 Terminals and 1 Runway to get income flowing</li>
+                    <li>Upgrade buildings regularly - it's often more profitable than building new ones</li>
+                    <li>Balance Terminals and Runways - you need both for passengers</li>
+                    <li>Add support buildings like Hangars and Fuel Stations for synergy</li>
+                    <li>Plan your airport layout - buildings don't just look good, they show their income!</li>
+                    <li>Watch the status overlay (top-left) to see your money and active planes</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>📊 Game Stats</h3>
+                <ul class="help-list">
+                    <li><strong>Money:</strong> Your current funds</li>
+                    <li><strong>Income/sec:</strong> How much money you earn per second</li>
+                    <li><strong>Passengers:</strong> Total passengers landed (requires Terminal)</li>
+                    <li><strong>Planes/hour:</strong> How many planes can land per hour</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>🚀 Next Steps</h3>
+                <p>Close this dialog and start building! Remember: you need both Terminals and Runways for a successful airport. Good luck, Airport Manager! 🛫</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
 </html>
